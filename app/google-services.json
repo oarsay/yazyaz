@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "8264193770",
+    "project_id": "yazyaz-ff39f",
+    "storage_bucket": "yazyaz-ff39f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8264193770:android:08a9db772443d85f74e993",
+        "android_client_info": {
+          "package_name": "com.example.yazyaz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "8264193770-mansleadegr1e1315f48go35o863jp51.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5krQdzyzH-Abce4i6uy2EuACcGWBYvr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "8264193770-mansleadegr1e1315f48go35o863jp51.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
