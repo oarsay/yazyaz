@@ -83,12 +83,10 @@ public class MainActivity extends AppCompatActivity {
                                 FirebaseUser user = myFirebaseAuth.getCurrentUser();
                                 if (user != null) {
                                     checkUserFromFirebase();
-                                }
-                                else{
+                                } else {
                                     showLoginLayout();
                                 }
-                            }
-                            else{
+                            } else {
                                 Toast.makeText(MainActivity.this, "Please enable all permissions", Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -114,13 +112,12 @@ public class MainActivity extends AppCompatActivity {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.exists()){
+                        if (snapshot.exists()) {
                             UserModel userModel = snapshot.getValue(UserModel.class);
                             assert userModel != null;
                             userModel.setUid(snapshot.getKey());
                             goToHomeActivity(userModel);
-                        }
-                        else {
+                        } else {
                             showRegisterLayout();
                         }
                     }
@@ -146,12 +143,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == LOGIN_REQUEST_CODE){
+        if (requestCode == LOGIN_REQUEST_CODE) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
-            if(resultCode == RESULT_OK){
+            if (resultCode == RESULT_OK) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            }
-            else{
+            } else {
                 Toast.makeText(this, "[ERROR]" + response.getError(), Toast.LENGTH_SHORT).show();
             }
         }

@@ -13,17 +13,18 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
-public class UserViewHolder extends RecyclerView.ViewHolder {
+public class ChatInfoHolder extends RecyclerView.ViewHolder {
     @BindView(R.id.img_avatar)
     public ImageView img_avatar;
     @BindView(R.id.txt_name)
     public TextView txt_name;
-    @BindView(R.id.txt_bio)
-    public TextView txt_bio;
+    @BindView(R.id.txt_last_message)
+    public TextView txt_last_message;
+    @BindView(R.id.txt_time)
+    public TextView txt_time;
+    Unbinder unbinder;
 
-    private Unbinder unbinder;
-
-    public UserViewHolder(@NonNull View itemView) {
+    public ChatInfoHolder(@NonNull View itemView) {
         super(itemView);
         unbinder = ButterKnife.bind(this, itemView);
     }

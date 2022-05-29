@@ -73,7 +73,7 @@ public class PeopleFragment extends Fragment {
 
             @Override
             protected void onBindViewHolder(@NonNull UserViewHolder holder, int position, @NonNull UserModel model) {
-                if(!adapter.getRef(position).getKey().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
+                if (!adapter.getRef(position).getKey().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
                     // Hide yourself
                     ColorGenerator generator = ColorGenerator.MATERIAL;
                     int color = generator.getColor(FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -93,8 +93,7 @@ public class PeopleFragment extends Fragment {
                     holder.itemView.setOnClickListener(view -> {
                         // Implement later
                     });
-                }
-                else{
+                } else {
                     holder.itemView.setVisibility(View.GONE);
                     holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
                 }
@@ -122,12 +121,12 @@ public class PeopleFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if(adapter != null) adapter.startListening();
+        if (adapter != null) adapter.startListening();
     }
 
     @Override
     public void onStop() {
-        if(adapter != null) adapter.stopListening();
+        if (adapter != null) adapter.stopListening();
         super.onStop();
     }
 }

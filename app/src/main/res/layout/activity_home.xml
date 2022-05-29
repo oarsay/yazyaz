@@ -12,7 +12,7 @@
         android:orientation="horizontal"
         android:layout_below="@+id/tabDots"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabDots"
@@ -27,7 +27,7 @@
         app:tabMaxWidth="0dp"
         app:tabGravity="fill"
         app:tabMode="fixed"
-        app:tabBackground="@drawable/tab_selector"/>
+        app:tabBackground="@drawable/tab_selector" />
 
 
 </RelativeLayout>

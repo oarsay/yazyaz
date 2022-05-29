@@ -49,10 +49,9 @@ public class HomeActivity extends AppCompatActivity {
             }
         }));
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            if(position == 0){
+            if (position == 0) {
                 tab.setText("Chat");
-            }
-            else{
+            } else {
                 tab.setText("People");
             }
         }).attach();

@@ -64,13 +64,13 @@ public class RegisterActivity extends AppCompatActivity {
         edt_phone.setEnabled(false);
 
         edt_date_of_birth.setOnFocusChangeListener((view, b) -> {
-            if(hasWindowFocus()){
+            if (hasWindowFocus()) {
                 materialDatePicker.show(getSupportFragmentManager(), materialDatePicker.toString());
             }
         });
 
         btn_register.setOnClickListener(view -> {
-            if(!isSelectBirthDate){
+            if (!isSelectBirthDate) {
                 Toast.makeText(this, "Please enter birthdate", Toast.LENGTH_LONG);
                 return;
             }
@@ -98,7 +98,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void init(){
+    private void init() {
         ButterKnife.bind(this);
         database = FirebaseDatabase.getInstance();
         userRef = database.getReference(Common.USER_REFERENCES);
