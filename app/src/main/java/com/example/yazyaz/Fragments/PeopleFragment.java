@@ -2,6 +2,7 @@ package com.example.yazyaz.Fragments;
 
 import androidx.lifecycle.ViewModelProvider;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
+import com.example.yazyaz.ChatActivity;
 import com.example.yazyaz.Common.Common;
 import com.example.yazyaz.Model.UserModel;
 import com.example.yazyaz.R;
@@ -91,7 +93,10 @@ public class PeopleFragment extends Fragment {
 
                     // Event
                     holder.itemView.setOnClickListener(view -> {
-                        // Implement later
+                        Common.chatUser = model;
+                        Common.chatUser.setUid(adapter.getRef(position).getKey());
+                        startActivity(new Intent(getContext(), ChatActivity.class));
+
                     });
                 } else {
                     holder.itemView.setVisibility(View.GONE);

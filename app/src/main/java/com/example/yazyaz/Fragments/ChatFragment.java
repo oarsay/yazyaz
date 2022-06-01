@@ -62,7 +62,8 @@ public class ChatFragment extends Fragment {
     private void loadChatList() {
         Query query = FirebaseDatabase.getInstance()
                 .getReference()
-                .child(Common.CHAT_LIST_REFERENCE);
+                .child(Common.CHAT_LIST_REFERENCE)
+                .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
         FirebaseRecyclerOptions<ChatInfoModel> options = new FirebaseRecyclerOptions
                 .Builder<ChatInfoModel>()
                 .setQuery(query, ChatInfoModel.class)
@@ -80,7 +81,10 @@ public class ChatFragment extends Fragment {
 
             @Override
             protected void onBindViewHolder(@NonNull ChatInfoHolder holder, int position, @NonNull ChatInfoModel model) {
-                if (!adapter.getRef(position).getKey().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                if (!adapter.getRef(position)
+                        .getKey().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+
+                    // Hide yourself
                     ColorGenerator generator = ColorGenerator.MATERIAL;
                     int color = generator.getColor(FirebaseAuth.getInstance().getCurrentUser().getUid());
                     TextDrawable.IBuilder builder = TextDrawable.builder()
@@ -111,6 +115,9 @@ public class ChatFragment extends Fragment {
                 }
             }
         };
+
+        adapter.startListening();
+        recycler_chat.setAdapter(adapter);
     }
 
     private void initView(View itemView) {
