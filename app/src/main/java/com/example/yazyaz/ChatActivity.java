@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +45,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -84,8 +86,7 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     LinearLayoutManager layoutManager;
 
     @OnClick(R.id.img_send)
-    void onSubmitChatClick(){
-        Toast.makeText(this, "Clicked!", Toast.LENGTH_SHORT).show();
+    void onSubmitChatClick() {
         offsetRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -105,20 +106,20 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     @Override
     protected void onStart() {
         super.onStart();
-        if(adapter != null)
+        if (adapter != null)
             adapter.startListening();
     }
 
     @Override
     protected void onStop() {
-        if(adapter != null) adapter.stopListening();
+        if (adapter != null) adapter.stopListening();
         super.onStop();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(adapter != null)
+        if (adapter != null)
             adapter.startListening();
     }
 
@@ -132,30 +133,31 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     }
 
     private void loadChatContent() {
-        String receiverId = FirebaseAuth.getInstance()
-                .getCurrentUser().getUid();
+
+        String receiverId = Objects.requireNonNull(FirebaseAuth.getInstance()
+                .getCurrentUser()).getUid();
+
         adapter = new FirebaseRecyclerAdapter<ChatMessageModel, RecyclerView.ViewHolder>(options) {
 
             @Override
             public int getItemViewType(int position) {
-                if(adapter.getItem(position).getSenderId()
+                if (adapter.getItem(position).getSenderId()
                         .equals(receiverId)) // If message is own
-                    return !adapter.getItem(position).isPicture()?0:1;
+                    return !adapter.getItem(position).isPicture() ? 0 : 1;
                 else
-                    return !adapter.getItem(position).isPicture()?2:3;
+                    return !adapter.getItem(position).isPicture() ? 2 : 3;
             }
 
             @Override
             protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull ChatMessageModel model) {
-                if(holder instanceof ChatTextHolder){
+                if (holder instanceof ChatTextHolder) {
                     ChatTextHolder chatTextHolder = (ChatTextHolder) holder;
                     chatTextHolder.txt_chat_message.setText(model.getContent());
                     chatTextHolder.txt_time.setText(
                             DateUtils.getRelativeTimeSpanString(model.getTimeStamp(),
-                                    Calendar.getInstance().getTimeInMillis(), 0)
+                                            Calendar.getInstance().getTimeInMillis(), 0)
                                     .toString());
-                }
-                else if(holder instanceof ChatTextReceiveHolder){
+                } else if (holder instanceof ChatTextReceiveHolder) {
                     ChatTextReceiveHolder chatTextHolder = (ChatTextReceiveHolder) holder;
                     chatTextHolder.txt_chat_message.setText(model.getContent());
                     chatTextHolder.txt_time.setText(
@@ -169,13 +171,12 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
                 View view;
-                if(viewType == 0) // Text message of user *own message*
+                if (viewType == 0) // Text message of user *own message*
                 {
                     view = LayoutInflater.from(parent.getContext())
                             .inflate(R.layout.layout_message_text_own, parent, false);
                     return new ChatTextReceiveHolder(view);
-                }
-                else// if(viewType == 2) // Text message of friend
+                } else// if(viewType == 2) // Text message of friend
                 {
                     view = LayoutInflater.from(parent.getContext())
                             .inflate(R.layout.layout_message_text_friend, parent, false);
@@ -192,9 +193,9 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                 super.onItemRangeInserted(positionStart, itemCount);
                 int friendlyMessageCount = adapter.getItemCount();
                 int lastVisiblePosition = layoutManager.findLastVisibleItemPosition();
-                if(lastVisiblePosition == -1 ||
+                if (lastVisiblePosition == -1 ||
                         (positionStart >= (friendlyMessageCount - 1) &&
-                                lastVisiblePosition == (positionStart - 1))){
+                                lastVisiblePosition == (positionStart - 1))) {
                     recycler_chat.scrollToPosition(positionStart);
                 }
             }
@@ -203,16 +204,16 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     }
 
     private void initViews() {
+
         listener = this;
         errorListener = this;
         database = FirebaseDatabase.getInstance();
         chatRef = database.getReference(Common.CHAT_REFERENCE);
-
-        offsetRef = database.getReference(".info/serverTimeOffSet");
+        offsetRef = database.getReference(".info/serverTimeOffset");
 
         Query query = chatRef.child(Common.generateChatRoomId(
                 Common.chatUser.getUid(),
-                FirebaseAuth.getInstance().getCurrentUser().getUid()
+                Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid()
         )).child(Common.CHAT_DETAIL_REFERENCE);
 
         options = new FirebaseRecyclerOptions.Builder<ChatMessageModel>()
@@ -234,7 +235,7 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
         txt_name.setText(Common.getName(Common.chatUser));
 
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         toolbar.setNavigationOnClickListener(view -> {
             finish();
@@ -243,11 +244,12 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
 
     @Override
     public void onLoadOnlyTimeSuccess(long estimateTimeInMs) {
+
         ChatMessageModel chatMessageModel = new ChatMessageModel();
         chatMessageModel.setName(Common.getName(Common.currentUser));
-        chatMessageModel.setContent(edt_chat.getText().toString());
+        chatMessageModel.setContent(Objects.requireNonNull(edt_chat.getText()).toString());
         chatMessageModel.setTimeStamp(estimateTimeInMs);
-        chatMessageModel.setSenderId(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        chatMessageModel.setSenderId(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid());
 
         // Current, we just implement chat text
         chatMessageModel.setPicture(false);
@@ -257,12 +259,13 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
 
     private void submitChatToFirebase(ChatMessageModel chatMessageModel, boolean isPicture, long estimateTimeInMs) {
 
+
         chatRef.child(Common.generateChatRoomId(Common.chatUser.getUid(),
-                FirebaseAuth.getInstance().getCurrentUser().getUid()))
+                        Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid()))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.exists())
+                        if (snapshot.exists())
                             appendChat(chatMessageModel, isPicture, estimateTimeInMs);
                         else
                             createChat(chatMessageModel, isPicture, estimateTimeInMs);
@@ -276,6 +279,7 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     }
 
     private void appendChat(ChatMessageModel chatMessageModel, boolean isPicture, long estimateTimeInMs) {
+
         Map<String, Object> update_data = new HashMap<>();
         update_data.put("lastUpdate", estimateTimeInMs);
 
@@ -286,7 +290,7 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
         // Update on user list
         FirebaseDatabase.getInstance()
                 .getReference(Common.CHAT_LIST_REFERENCE)
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .child(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid())
                 .child(Common.chatUser.getUid())
                 .updateChildren(update_data)
                 .addOnFailureListener(e -> {
@@ -321,12 +325,12 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
 
-                                                if(task.isSuccessful()){
+                                                if (task.isSuccessful()) {
 
                                                     // Clear
                                                     edt_chat.setText("");
                                                     edt_chat.requestFocus();
-                                                    if(adapter != null){
+                                                    if (adapter != null) {
                                                         adapter.notifyDataSetChanged();
                                                     }
                                                 }
@@ -338,8 +342,10 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     }
 
     private void createChat(ChatMessageModel chatMessageModel, boolean isPicture, long estimateTimeInMs) {
+
+
         ChatInfoModel chatInfoModel = new ChatInfoModel();
-        chatInfoModel.setCreateId(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        chatInfoModel.setCreateId(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid());
         chatInfoModel.setFriendName(Common.getName(Common.chatUser));
         chatInfoModel.setFriendId(Common.chatUser.getUid());
         chatInfoModel.setCreateName(Common.getName(Common.currentUser));
@@ -375,7 +381,7 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
 
                                 // Add on Chat Ref
                                 chatRef.child(Common.generateChatRoomId(Common.chatUser.getUid(),
-                                        FirebaseAuth.getInstance().getCurrentUser().getUid()))
+                                                FirebaseAuth.getInstance().getCurrentUser().getUid()))
                                         .child(Common.CHAT_DETAIL_REFERENCE)
                                         .push()
                                         .setValue(chatMessageModel)
@@ -389,12 +395,12 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
 
-                                                if(task.isSuccessful()){
+                                                if (task.isSuccessful()) {
 
                                                     // Clear
                                                     edt_chat.setText("");
                                                     edt_chat.requestFocus();
-                                                    if(adapter != null){
+                                                    if (adapter != null) {
                                                         adapter.notifyDataSetChanged();
                                                     }
                                                 }

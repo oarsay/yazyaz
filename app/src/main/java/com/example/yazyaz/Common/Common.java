@@ -13,9 +13,9 @@ public class Common {
     public static UserModel chatUser = new UserModel();
 
     public static String generateChatRoomId(String a, String b) {
-        if(a.compareTo(b) > 0)
+        if (a.compareTo(b) > 0)
             return new StringBuilder(a).append(b).toString();
-        else if(a.compareTo(b) < 0)
+        else if (a.compareTo(b) < 0)
             return new StringBuilder(b).append(a).toString();
         else
             return new StringBuilder("Chat_Your_Self_Error")
