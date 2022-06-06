@@ -1,14 +1,24 @@
 package com.example.yazyaz;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,11 +31,14 @@ import android.widget.Toast;
 
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
+import com.bumptech.glide.Glide;
 import com.example.yazyaz.Common.Common;
 import com.example.yazyaz.Listener.IFirebaseLoadFailed;
 import com.example.yazyaz.Listener.ILoadTimeFromFirebaseListener;
 import com.example.yazyaz.Model.ChatInfoModel;
 import com.example.yazyaz.Model.ChatMessageModel;
+import com.example.yazyaz.ViewHolders.ChatPictureHolder;
+import com.example.yazyaz.ViewHolders.ChatPictureReceiveHolder;
 import com.example.yazyaz.ViewHolders.ChatTextHolder;
 import com.example.yazyaz.ViewHolders.ChatTextReceiveHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -41,7 +54,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +102,28 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
     FirebaseRecyclerAdapter<ChatMessageModel, RecyclerView.ViewHolder> adapter;
     FirebaseRecyclerOptions<ChatMessageModel> options;
     Uri fileUri;
+    StorageReference storageReference;
     LinearLayoutManager layoutManager;
+
+    @OnClick(R.id.img_image)
+    void onSelectImageClick(){
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, MY_RESULT_LOAD_IMAGE);
+    }
+
+    @OnClick(R.id.img_camera)
+    void onCaptureImageClick(){
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "New Picture");
+        values.put(MediaStore.Images.Media.DESCRIPTION, "From your camera");
+        fileUri = getContentResolver().insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values
+        );
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+        startActivityForResult(intent, MY_CAMERA_REQUEST_CODE);
+    }
 
     @OnClick(R.id.img_send)
     void onSubmitChatClick() {
@@ -101,6 +141,48 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                 errorListener.onError(error.getMessage());
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == MY_CAMERA_REQUEST_CODE){
+            if(resultCode == RESULT_OK){
+                Log.d("REQUEST", "CAMERA");
+                try {
+                    Bitmap thumbnail = MediaStore.Images.Media
+                            .getBitmap(
+                                    getContentResolver(),
+                                    fileUri
+                            );
+                    img_preview.setImageBitmap(thumbnail);
+                    img_preview.setVisibility(View.VISIBLE);
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else if(requestCode == MY_RESULT_LOAD_IMAGE){
+            if(resultCode == RESULT_OK){
+                try {
+                    Log.d("REQUEST", "GALLERY");
+                    final Uri imageUri = data.getData();
+                    InputStream inputStream = getContentResolver()
+                            .openInputStream(imageUri);
+                    Bitmap selectedImage = BitmapFactory.decodeStream(inputStream);
+                    img_preview.setImageBitmap(selectedImage);
+                    img_preview.setVisibility(View.VISIBLE);
+                    fileUri = imageUri;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else
+            Toast.makeText(this, "Please choose an image", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -165,6 +247,28 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                                             Calendar.getInstance().getTimeInMillis(), 0)
                                     .toString());
                 }
+                else if (holder instanceof ChatPictureHolder){
+                    ChatPictureHolder chatPictureHolder = (ChatPictureHolder) holder;
+                    chatPictureHolder.txt_chat_message.setText(model.getContent());
+                    chatPictureHolder.txt_time.setText(
+                            DateUtils.getRelativeTimeSpanString(model.getTimeStamp(),
+                                            Calendar.getInstance().getTimeInMillis(), 0)
+                                    .toString());
+                    Glide.with(ChatActivity.this)
+                            .load(model.getPictureLink())
+                            .into(chatPictureHolder.img_preview);
+                }
+                else if(holder instanceof ChatPictureReceiveHolder){
+                    ChatPictureReceiveHolder chatPictureHolder = (ChatPictureReceiveHolder) holder;
+                    chatPictureHolder.txt_chat_message.setText(model.getContent());
+                    chatPictureHolder.txt_time.setText(
+                            DateUtils.getRelativeTimeSpanString(model.getTimeStamp(),
+                                            Calendar.getInstance().getTimeInMillis(), 0)
+                                    .toString());
+                    Glide.with(ChatActivity.this)
+                            .load(model.getPictureLink())
+                            .into(chatPictureHolder.img_preview);
+                }
             }
 
             @NonNull
@@ -176,11 +280,22 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                     view = LayoutInflater.from(parent.getContext())
                             .inflate(R.layout.layout_message_text_own, parent, false);
                     return new ChatTextReceiveHolder(view);
-                } else// if(viewType == 2) // Text message of friend
+                } else if(viewType == 1) // Picture message of user
+                {
+                    view = LayoutInflater.from(parent.getContext())
+                            .inflate(R.layout.layout_message_picture_own, parent, false);
+                    return new ChatPictureHolder(view);
+                }
+                else if(viewType == 2) // Text message of friend
                 {
                     view = LayoutInflater.from(parent.getContext())
                             .inflate(R.layout.layout_message_text_friend, parent, false);
                     return new ChatTextHolder(view);
+                }
+                else{ // Picture message of friend
+                    view = LayoutInflater.from(parent.getContext())
+                            .inflate(R.layout.layout_message_picture_friend, parent, false);
+                    return new ChatPictureReceiveHolder(view);
                 }
 
             }
@@ -242,6 +357,7 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onLoadOnlyTimeSuccess(long estimateTimeInMs) {
 
@@ -251,10 +367,55 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
         chatMessageModel.setTimeStamp(estimateTimeInMs);
         chatMessageModel.setSenderId(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid());
 
-        // Current, we just implement chat text
-        chatMessageModel.setPicture(false);
-        submitChatToFirebase(chatMessageModel, chatMessageModel.isPicture(), estimateTimeInMs);
+        if(fileUri == null){
+            chatMessageModel.setPicture(false);
+            submitChatToFirebase(chatMessageModel, chatMessageModel.isPicture(), estimateTimeInMs);
+        }
+        else{
+            uploadPicture(fileUri, chatMessageModel, estimateTimeInMs);
+        }
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void uploadPicture(Uri fileUri, ChatMessageModel chatMessageModel, long estimateTimeInMs) {
+        AlertDialog dialog = new AlertDialog.Builder(ChatActivity.this)
+                .setCancelable(false)
+                .setMessage("Please wait...")
+                .create();
+        dialog.show();
+
+        String fileName = Common.getFileName(getContentResolver(), fileUri);
+        String path = Common.chatUser.getUid() +
+                "/" +
+                fileName;
+        storageReference = FirebaseStorage.getInstance()
+                .getReference()
+                .child(path);
+        Log.d("PATH:", path);
+        UploadTask uploadTask = storageReference.putFile(fileUri);
+        // Create task
+        Task<Uri> task = uploadTask.continueWithTask(task1 -> {
+            if(!task1.isSuccessful())
+                Toast.makeText(this, "Failed to upload", Toast.LENGTH_SHORT).show();
+            return storageReference.getDownloadUrl();
+        }).addOnCompleteListener(task12 -> {
+            if (task12.isSuccessful()){
+                String url = task12.getResult().toString();
+                dialog.dismiss();
+
+                chatMessageModel.setPicture(true);
+                chatMessageModel.setPictureLink(url);
+
+                submitChatToFirebase(chatMessageModel, chatMessageModel.isPicture(), estimateTimeInMs);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(ChatActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void submitChatToFirebase(ChatMessageModel chatMessageModel, boolean isPicture, long estimateTimeInMs) {
@@ -283,8 +444,10 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
         Map<String, Object> update_data = new HashMap<>();
         update_data.put("lastUpdate", estimateTimeInMs);
 
-        // Only text
-        update_data.put("lastMessage", chatMessageModel.getContent());
+        if(isPicture)
+            update_data.put("lastMessage", "<Image>");
+        else
+            update_data.put("lastMessage", chatMessageModel.getContent());
 
         // Update
         // Update on user list
@@ -333,6 +496,11 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                                                     if (adapter != null) {
                                                         adapter.notifyDataSetChanged();
                                                     }
+                                                    // Clear preview thumbnail
+                                                    if(isPicture){
+                                                        fileUri = null;
+                                                        img_preview.setVisibility(View.GONE);
+                                                    }
                                                 }
                                             }
                                         });
@@ -350,8 +518,10 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
         chatInfoModel.setFriendId(Common.chatUser.getUid());
         chatInfoModel.setCreateName(Common.getName(Common.currentUser));
 
-        // Only text
-        chatInfoModel.setLastMessage(chatMessageModel.getContent());
+        if(isPicture)
+            chatInfoModel.setLastMessage("<Image>");
+        else
+            chatInfoModel.setLastMessage(chatMessageModel.getContent());
 
         chatInfoModel.setLastUpdate(estimateTimeInMs);
         chatInfoModel.setCreateDate(estimateTimeInMs);
@@ -402,6 +572,11 @@ public class ChatActivity extends AppCompatActivity implements ILoadTimeFromFire
                                                     edt_chat.requestFocus();
                                                     if (adapter != null) {
                                                         adapter.notifyDataSetChanged();
+                                                    }
+                                                    // Clear preview thumbnail
+                                                    if(isPicture){
+                                                        fileUri = null;
+                                                        img_preview.setVisibility(View.GONE);
                                                     }
                                                 }
                                             }

@@ -71,7 +71,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         btn_register.setOnClickListener(view -> {
             if (!isSelectBirthDate) {
-                Toast.makeText(this, "Please enter birthdate", Toast.LENGTH_LONG);
+                Toast.makeText(this, "Please enter birthdate", Toast.LENGTH_LONG).show();
                 return;
             }
 
